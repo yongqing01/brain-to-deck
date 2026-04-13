@@ -1,153 +1,243 @@
+# Brain-to-Deck
+
+一键把你脑子里的想法变成专业展示材料。
+
+把散乱的文字、图片、文档、PDF 丢给 Claude，它会帮你整合、结构化、可视化，输出一份可以直接拿去汇报的成品。
 
 ---
-name: brain-to-deck
-description: "One-click transformation of raw thoughts, uploads, and brain dumps into polished visual deliverables (HTML, PDF, PPTX, images). Use this skill whenever a user wants to turn messy inputs — text notes, images, docx, PDFs, scattered ideas, brainstorms, meeting notes, or any combination — into a cohesive presentation or visual material. Trigger on: 'organize my thoughts', 'turn this into a presentation', 'make this presentable', 'visualize my ideas', 'structure this', 'create a deck from these', 'one-pager', 'summarize and visualize', mixed file uploads needing unified output, or raw unstructured text that needs to become something showable. Also trigger for '展示材料', '整合', '结构化', '可视化'. The bridge between 'stuff in my head' and 'something I can show people'."
+
+## 它能做什么
+
+你给它任意组合的原始素材，它输出一份结构清晰、视觉统一的展示材料。
+
+**支持的输入：** 纯文本、Markdown、图片、`.docx`、`.pdf`、`.pptx`、`.xlsx`、`.csv`，或以上任意组合。
+
+**支持的输出：**
+
+| 格式 | 适用场景 |
+|------|---------|
+| PPTX | 会议演示、路演、汇报 |
+| HTML | 在线分享、交互式报告 |
+| PDF | 打印、正式文档、一页纸提案 |
+
+**视觉风格：** 内置 Bain & Company 咨询风格 — 白底、红色强调、Arial 字体、Action Title、灰阶图表。所有输出自动遵循这套规范，无需额外配置。
+
 ---
- 
-# Brain-to-Deck: Raw Thoughts → Polished Deliverables
- 
-Turn any combination of messy inputs into structured, beautiful output materials. This skill is the bridge between chaotic brain dumps and presentation-ready deliverables.
- 
-## Philosophy
- 
-People's ideas don't arrive in neat outlines. They come as scattered notes, half-formed thoughts, random screenshots, meeting recordings, PDFs from research, docs from collaborators — a mess of signal mixed with noise. This skill's job is to **extract the signal, find the structure, and produce something beautiful** — all in one shot.
- 
-## Workflow Overview
- 
+
+## 安装
+
+### Claude Code
+
+```bash
+# 方法 1: 直接安装 .skill 文件
+# 将 brain-to-deck.skill 放到项目目录下，Claude Code 会自动识别
+
+# 方法 2: 手动安装
+# 将 brain-to-deck/ 文件夹复制到你的项目的 .claude/skills/ 目录下
+cp -r brain-to-deck/ your-project/.claude/skills/brain-to-deck/
 ```
-[Raw Inputs] → [Ingest & Parse] → [Analyze & Structure] → [Design & Render] → [Output]
+
+### Codex
+
+将 `brain-to-deck/` 文件夹放到项目的 skills 目录中即可。
+
+### Claude.ai
+
+在对话中上传 `brain-to-deck.skill` 文件，Claude 会自动加载。
+
+---
+
+## 使用方法
+
+### 最简单的方式：直接丢素材
+
 ```
- 
-### Step 1: Ingest Everything
- 
-Read ALL uploaded files and user-provided text. Use the right tool for each:
- 
-| Input Type | How to Read |
-|-----------|-------------|
-| Plain text / markdown in chat | Already in context — just use it |
-| `.docx` | Read the docx skill: `/mnt/skills/public/docx/SKILL.md` |
-| `.pdf` | Read the pdf-reading skill: `/mnt/skills/public/pdf-reading/SKILL.md` |
-| `.pptx` | `python -m markitdown file.pptx` (install markitdown if needed) |
-| `.xlsx` / `.csv` | Read with pandas or openpyxl |
-| Images (`.png`, `.jpg`, etc.) | View them directly — describe what you see, extract any text |
-| `.txt` / `.md` | `cat` or `view` tool |
- 
-Check `/mnt/user-data/uploads/` for all uploaded files. Don't skip anything — every piece of input matters.
- 
-### Step 2: Analyze & Structure
- 
-This is the most critical intellectual step. You are not just reformatting — you are **thinking**.
- 
-1. **Extract key themes**: What are the 3-7 core ideas across all inputs?
-2. **Find the narrative**: What story connects these ideas? What's the logical flow?
-3. **Identify hierarchy**: What's the big picture vs. supporting details?
-4. **Spot data**: Are there numbers, comparisons, timelines, or relationships that deserve visualization?
-5. **Catalog visuals**: Which uploaded images should be included? What new visuals should be created?
- 
-Present your proposed structure to the user before rendering, unless they've said "just do it" or the intent is obvious. A quick outline like:
- 
+用户: [粘贴一段散乱的会议纪要] 帮我做成展示材料
 ```
-Here's how I'd structure this:
-1. [Title/Hook] — ...
-2. [Core Problem/Context] — ...
-3. [Key Insight A] — ...
-4. [Key Insight B] — ...
-5. [Data/Evidence] — ...
-6. [Conclusion/Call to Action] — ...
- 
-Should I proceed, or would you like to adjust?
+
 ```
- 
-### Step 3: Choose Output Format
- 
-If the user specified a format, use it. Otherwise, recommend based on context:
- 
-| Use Case | Recommended Format | Why |
-|----------|-------------------|-----|
-| Sharing in meetings, presenting to team | **PPTX** | Standard presentation format, editable |
-| Sharing via link, interactive content | **HTML** | Rich interactivity, works everywhere |
-| Printing, formal documents, reports | **PDF** | Print-ready, professional |
-| Social media, quick visual summary | **Image (HTML→screenshot)** | Single visual, easy to share |
-| User says "展示材料" / "展示" without specifics | **HTML** first (richest output) | Most visual impact |
- 
-### Step 4: Design & Render
- 
-Read the appropriate downstream skill BEFORE generating:
- 
-- **PPTX** → Read `/mnt/skills/public/pptx/SKILL.md` (and its sub-references like `pptxgenjs.md`)
-- **PDF** → Read `/mnt/skills/public/pdf/SKILL.md`
-- **HTML** → Read `/mnt/skills/public/frontend-design/SKILL.md`
-- **DOCX** → Read `/mnt/skills/public/docx/SKILL.md`
- 
-Then **ALWAYS read the design reference file** before generating ANY output:
- 
-→ **Read `references/bain-style.md`** (relative to this skill's directory)
- 
-This file defines the complete visual system: colors, typography, slide anatomy, chart formatting, layout patterns, content writing rules, and format-specific implementation notes. It is the single source of truth for all visual decisions. Do not deviate from it.
- 
-Key principles from the design reference (read the full file for specifics):
- 
-- **Action titles, not topic titles** — every slide title is a complete sentence stating the conclusion
-- **One message per slide/section** — if you have two insights, make two slides
-- **Pyramid Principle** — lead with the answer, then supporting arguments, then evidence
-- **Bain Red (`CC2229`) as accent only** — white background, grayscale dominant, red to spotlight
-- **Arial everywhere** — no decorative fonts, no emoji, no icons
-- **Charts: column/bar, waterfall, line** — never pie charts, never 3D, never donut
-- **Callout boxes on charts** — annotate the key insight directly on the chart
-- **Source lines on every data slide** — bottom-left, 7-8pt gray
-- **No decoration** — no gradients, shadows, glow, rounded corners, or animated transitions
- 
-### Step 5: Quality Check
- 
-After generating:
- 
-1. **Content check**: Does the output capture ALL the key ideas from the inputs? Did anything get lost?
-2. **Flow check**: Does the narrative make sense from start to finish?
-3. **Visual check**: Convert to images and inspect. Fix any overlaps, cut-off text, or alignment issues.
-4. **Fidelity check**: Does it sound like the user, or did it drift into generic corporate speak?
- 
-## Special Handling
- 
-### Mixed-Language Content
-If inputs contain multiple languages, produce the output in the dominant language unless the user specifies otherwise. Preserve key terms in their original language when they're domain-specific.
- 
-### Data-Heavy Inputs
-When inputs contain lots of numbers/data (spreadsheets, reports with stats):
-- Create dedicated data visualization slides/sections
-- Use chart types appropriate to the data (comparison → bar chart, trend → line chart, composition → pie/donut, relationship → scatter)
-- Always include the actual numbers alongside visualizations
- 
-### Image-Heavy Inputs
-When the user uploads many images:
-- Create a visual-forward layout (gallery, grid, or full-bleed images)
-- Use images as section backgrounds or hero elements
-- Add captions extracted from context
- 
-### Minimal Input ("Just some ideas")
-When the user gives you very little to work with:
-- Ask 1-2 clarifying questions about audience and purpose
-- Expand on their ideas with reasonable assumptions
-- Note your assumptions in the output so they can correct
- 
-## Output Delivery
- 
-Always save final output to `/mnt/user-data/outputs/` and present via `present_files`.
- 
-If you generated an HTML file, also mention they can open it in a browser for the full interactive experience.
- 
-If the user might want multiple formats, offer: "I've created this as [format]. Want me to also export it as [other format]?"
- 
-## Example Scenarios
- 
-**Scenario 1**: User pastes meeting notes + uploads a spreadsheet
-→ Extract action items and data → Create a PPTX deck with meeting summary, key decisions, data charts, and next steps.
- 
-**Scenario 2**: User uploads 5 research PDFs + types "make me a literature review presentation"
-→ Read all PDFs → Identify themes, agreements, contradictions → Create an HTML presentation with sections per theme, citation cards, and a synthesis conclusion.
- 
-**Scenario 3**: User uploads photos from a trip + types "make a travel memory book"
-→ View all photos → Organize chronologically or thematically → Create a beautiful HTML page with photo gallery, captions, and story flow.
- 
-**Scenario 4**: User types a stream-of-consciousness brain dump about a startup idea
-→ Extract the core value proposition, target market, competitive advantage → Create a one-pager PDF or pitch deck PPTX.
- 
+用户: [上传 3 个 PDF + 1 个 Excel] 整合成一个汇报 PPT
+```
+
+```
+用户: [上传项目文档] 做一个一页纸的项目提案 PDF
+```
+
+Claude 会自动：
+1. 读取所有输入
+2. 提取核心主题，找到叙事线
+3. 选择合适的输出格式
+4. 按照 Bain 风格生成成品
+5. 输出文件供你下载
+
+### 指定输出格式
+
+```
+用户: 把这些内容做成 PPT
+用户: 做一个 HTML 报告
+用户: 生成一页纸 PDF
+```
+
+### 触发关键词
+
+以下词汇会触发这个 skill：
+
+| 中文 | 英文 |
+|------|------|
+| 展示材料、做个 PPT、做个报告 | turn this into a presentation |
+| 整合、结构化、可视化 | organize my thoughts |
+| 做成展示、帮我汇报 | make this presentable |
+| 一页纸、one-pager | one-pager, summarize and visualize |
+
+---
+
+## 典型场景
+
+### 场景 1: 创业 Pitch Deck
+
+**输入：** 一段散乱的创业想法文字
+
+**输出：** 8 页完整的融资路演 PPT
+
+```
+我有个想法，做一个宠物健康 App，用 AI 识别皮肤病...
+市场大概 3000 亿...团队从字节出来的...需要融 500 万...
+
+帮我做成 pitch deck
+```
+
+### 场景 2: 项目复盘报告
+
+**输入：** 会议纪要（Markdown）+ 月度数据（CSV）
+
+**输出：** 交互式 HTML 报告
+
+```
+[上传 meeting_notes.md 和 metrics.csv]
+
+帮我做成一个项目复盘报告
+```
+
+### 场景 3: 一页纸提案
+
+**输入：** 一段 brain dump
+
+**输出：** A4 单页 PDF
+
+```
+下周要给老板汇报一个内部工具项目，做个统一工作台...
+大概能节省每人每天 30 分钟...需要 6 个人 4 个月...
+
+帮我做成一页纸提案
+```
+
+### 场景 4: 研究整合
+
+**输入：** 多个 PDF 文献 + 自己的笔记
+
+**输出：** 文献综述 PPT
+
+```
+[上传 5 个 PDF]
+这是我收集的行业报告，帮我整合成一个行业分析 PPT
+```
+
+---
+
+## 视觉风格说明
+
+所有输出遵循 Bain & Company 咨询风格。核心规范：
+
+| 维度 | 规范 |
+|------|------|
+| **配色** | 白底 + Bain Red (`#CC2229`) 强调 + 灰阶（`#1A1A1A` / `#4A4A4A` / `#7F7F7F`） |
+| **字体** | 全场 Arial，大数字用 Georgia |
+| **标题** | Action Title — 完整结论句（"收入下降12%，主因客户流失"而非"收入分析"） |
+| **图表** | 柱状图、瀑布图、折线图为主，红色高亮关键数据，附 callout box |
+| **禁止** | 无饼图、无3D、无渐变、无阴影、无圆角、无emoji/图标装饰 |
+| **页脚** | 每页含 Source Line（左下）+ 页码（右下） |
+| **原则** | 每页一个信息，金字塔原则，MECE 结构 |
+
+完整的视觉规范见 `references/bain-style.md`。
+
+### 自定义风格
+
+如果你想修改视觉风格，编辑 `references/bain-style.md` 即可。所有配色、字体、图表规则、布局模式都集中定义在这一个文件中。
+
+---
+
+## 文件结构
+
+```
+brain-to-deck/
+├── SKILL.md                    # 技能主文件：工作流、触发条件、执行步骤
+└── references/
+    └── bain-style.md           # 视觉设计规范：配色、字体、图表、布局
+```
+
+---
+
+## 工作原理
+
+```
+                    ┌─────────────┐
+                    │  用户输入    │
+                    │ 文字/文件/图片│
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Step 1     │
+                    │  摄入解析    │  读取所有文件和文字
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Step 2     │
+                    │  分析结构    │  提取主题 → 找叙事线 → 建层级
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Step 3     │
+                    │  选择格式    │  PPTX / HTML / PDF
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Step 4     │
+                    │  设计渲染    │  读取 bain-style.md → 生成成品
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Step 5     │
+                    │  质量检查    │  内容 / 流程 / 视觉 / 保真度
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │   输出文件   │
+                    │  .pptx/.html│
+                    │  .pdf       │
+                    └─────────────┘
+```
+
+---
+
+## 常见问题
+
+**Q: 我可以同时输出多种格式吗？**
+A: 可以。先指定一种格式生成，然后说"也帮我导出成 PDF"即可。
+
+**Q: 中英文混合内容怎么处理？**
+A: 自动检测主要语言作为输出语言，专业术语保留原文。
+
+**Q: 输入很少怎么办？**
+A: Claude 会问 1-2 个问题确认受众和目的，然后基于合理假设扩展内容，并在输出中标注假设部分。
+
+**Q: 我想改视觉风格怎么办？**
+A: 编辑 `references/bain-style.md`，修改配色、字体、图表规则等。所有输出会自动遵循新规范。
+
+**Q: 支持哪些文件类型作为输入？**
+A: 文本（`.txt` `.md`）、文档（`.docx` `.pdf` `.pptx`）、数据（`.xlsx` `.csv`）、图片（`.png` `.jpg`）。
+
+---
+
+## License
+
+MIT
