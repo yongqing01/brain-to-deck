@@ -1,6 +1,6 @@
 ---
 name: brain-to-deck
-description: "One-click transformation of raw thoughts, uploads, and brain dumps into polished visual deliverables (HTML, PDF, PPTX, images). Use this skill whenever a user wants to turn messy inputs — text notes, images, docx, PDFs, scattered ideas, brainstorms, meeting notes, or any combination — into a cohesive presentation or visual material. Trigger on: 'organize my thoughts', 'turn this into a presentation', 'make this presentable', 'visualize my ideas', 'structure this', 'create a deck from these', 'one-pager', 'summarize and visualize', mixed file uploads needing unified output, or raw unstructured text that needs to become something showable. Also trigger for '展示材料', '整合', '结构化', '可视化'. The bridge between 'stuff in my head' and 'something I can show people'."
+description: "One-click transformation of raw thoughts, uploads, and brain dumps into polished visual deliverables (HTML, PDF, PPTX, images). Use this skill whenever a user wants to turn messy inputs — text notes, images, docx, PDFs, scattered ideas, brainstorms, meeting notes, or any combination — into a cohesive presentation or visual material. Also use when the user uploads a PPTX, PDF, or webpage and asks to extract, learn, or follow its visual style. Trigger on: 'organize my thoughts', 'turn this into a presentation', 'make this presentable', 'visualize my ideas', 'structure this', 'create a deck from these', 'one-pager', 'summarize and visualize', 'use this style', 'learn this template', 'extract the design style', mixed file uploads needing unified output, or raw unstructured text. Also trigger for '展示材料', '整合', '结构化', '可视化', '按这个风格', '提取风格', '学习这个模板'. The bridge between 'stuff in my head' and 'something I can show people'."
 ---
 
 # Brain-to-Deck: Raw Thoughts → Polished Deliverables
@@ -78,11 +78,14 @@ Read the appropriate downstream skill BEFORE generating:
 - **HTML** → Read `/mnt/skills/public/frontend-design/SKILL.md`
 - **DOCX** → Read `/mnt/skills/public/docx/SKILL.md`
 
-Then **ALWAYS read the design reference file** before generating ANY output:
+Then **ALWAYS read the active design reference file** before generating ANY output:
 
-→ **Read `references/bain-style.md`** (relative to this skill's directory)
+→ **Default: Read `references/bain-style.md`** (relative to this skill's directory)
+→ **If the user has created a custom style and specified to use it: Read `references/[custom-name]-style.md` instead**
 
-This file defines the complete visual system: colors, typography, slide anatomy, chart formatting, layout patterns, content writing rules, and format-specific implementation notes. It is the single source of truth for all visual decisions. Do not deviate from it.
+The `references/` directory can contain multiple style files. `bain-style.md` is the built-in default and should never be modified or deleted. When a user extracts a new style (see "Style Extraction" below), it is saved as a separate file alongside `bain-style.md`. The user chooses which style to use by saying things like "用我的 [name] 风格" or "switch to [name] style". If the user doesn't specify, always default to `bain-style.md`.
+
+The active style file is the single source of truth for all visual decisions. Do not deviate from it.
 
 Key principles from the design reference (read the full file for specifics):
 
@@ -128,6 +131,127 @@ When the user gives you very little to work with:
 - Expand on their ideas with reasonable assumptions
 - Note your assumptions in the output so they can correct
 
+## Style Extraction: Learn a Visual Style from Reference Material
+
+This is a separate workflow from the main brain-to-deck flow. It triggers when the user uploads a PPTX, PDF, or webpage screenshot and asks you to "learn this style", "use this template's style", "follow this format", or similar. The goal is to **reverse-engineer a complete visual design specification** from the reference material and save it as a new style reference file.
+
+### When to trigger
+
+- User uploads a `.pptx` and says "以后按这个风格来" / "用这个模板的风格"
+- User uploads a `.pdf` and says "学一下这个排版" / "follow this style"
+- User shares a URL or screenshot and says "我喜欢这个网页的风格"
+- User says "帮我提取这个 PPT 的设计风格" / "识别一下这个模板的视觉规范"
+
+### Step-by-step: Extracting a style
+
+#### 1. Ingest the reference material
+
+| Source | How to extract visuals |
+|--------|----------------------|
+| `.pptx` | Convert to images: `python scripts/office/soffice.py --headless --convert-to pdf file.pptx` then `pdftoppm -jpeg -r 200 file.pdf slide`. Also extract text with `python -m markitdown file.pptx` for content structure analysis. |
+| `.pdf` | Convert to images: `pdftoppm -jpeg -r 200 file.pdf page`. Also extract text with `pdftotext -layout file.pdf`. |
+| Image / screenshot | View the image directly. |
+| URL (webpage) | Use `web_fetch` to get the HTML, or ask the user for a screenshot. |
+
+**View at least 3-5 pages/slides** to identify consistent patterns vs. one-off choices.
+
+#### 2. Analyze and extract these dimensions
+
+Go through each dimension systematically. For every dimension, describe **what you observe** with specific values, not vague descriptions.
+
+**Color Palette:**
+- Identify the exact hex values used. Use a methodical approach: look at backgrounds, text, headings, accent elements, chart colors, table headers.
+- Determine the roles: which color is the primary accent? Which is the background? How many distinct grays are used for text hierarchy?
+- Note the ratio: is the palette warm or cool? High contrast or low contrast? How much white space vs. colored area?
+
+**Typography:**
+- Identify font families (or closest match if custom fonts are used). Look at headings vs. body vs. captions — are they the same family or different?
+- Note exact sizes for each text level (title, subtitle, body, caption, footnote).
+- Note weight usage: where is bold used? Where is regular? Is italic used anywhere?
+- Note alignment: left-aligned? Center? Justified?
+- For PPTX: measure approximate sizes from the slide images if text extraction doesn't reveal font metadata.
+
+**Layout Patterns:**
+- What is the slide/page anatomy? Where does the title sit? Where is the main content area?
+- Are there accent bars, dividers, or decorative elements? Where and how large?
+- What is the margin/padding system? Generous or tight?
+- How are multi-element slides laid out? (chart+bullets side by side? Full-width chart? Grid of cards?)
+- Is there a consistent header/footer structure?
+
+**Chart & Data Visualization:**
+- What chart types are used? (bar, line, pie, etc.)
+- How are charts colored? What's the primary data series color vs. secondary?
+- Are there data labels, callout boxes, annotations?
+- Grid lines: visible or hidden? Color?
+- Legend placement: bottom, right, or none?
+
+**Tables:**
+- Header row style: background color, text color, bold?
+- Body row style: alternating stripes? Border style?
+- Cell padding: tight or generous?
+
+**Content Writing Style:**
+- Are titles descriptive ("Market Analysis") or action-oriented ("Revenue declined 12%")?
+- Bullet point density: few key bullets or dense text?
+- Is there a source line / footnote convention?
+- Page numbers: present? Position? Style?
+
+**Decorative Elements:**
+- Accent lines, shapes, icons, logos?
+- Shadows, rounded corners, gradients?
+- Background patterns or textures?
+
+#### 3. Generate the style reference file
+
+Produce a markdown file that follows the **exact same structure** as `references/bain-style.md`. Use it as a template — same sections, same table formats, same level of specificity. The output file must include:
+
+1. **Core Philosophy** — a one-sentence summary of the style's personality
+2. **Color Palette** — table with Role, Name, Hex, Usage for every color identified
+3. **Typography** — tables for PPTX, HTML, and PDF with Element, Font, Size, Weight, Color
+4. **Slide/Page Structure** — ASCII diagram showing the anatomy
+5. **Charts & Data Visualization** — preferred types, color rules, formatting rules
+6. **Layout Patterns** — named layouts with descriptions
+7. **Tables** — header/body/border specifications
+8. **Content Writing Rules** — title style, bullet conventions, source lines
+9. **What to NEVER Do** — based on what the reference material avoids
+10. **Format-Specific Notes** — implementation notes for PPTX, HTML, PDF
+
+#### 4. Save as a new style (do NOT overwrite bain-style.md)
+
+Save the new style file to `references/` with a descriptive name:
+```
+references/[style-name]-style.md
+```
+
+**Important:** `bain-style.md` is the built-in default and must never be overwritten or deleted. The new style file lives alongside it. The user can switch between styles at any time.
+
+After saving, tell the user:
+
+```
+已从你的模板中提取了完整的视觉规范，保存为 references/[name]-style.md。
+
+提取的核心要素：
+- 配色：[primary] + [secondary] + ...
+- 字体：[heading font] / [body font]
+- 标题风格：[action title / topic title / ...]
+- 图表：[preferred types]
+- 特征元素：[accent bars / icons / ...]
+
+现在你有两套风格可选：
+1. bain-style（默认）— Bain 咨询风格
+2. [name]-style（新建）— 基于你上传的模板
+
+说"用 [name] 风格"即可切换。要调整细节可以直接告诉我。
+```
+
+### Tips for better extraction
+
+- **Multiple pages are essential.** One slide might have a one-off layout. Look for what's *consistent* across 3+ slides.
+- **Distinguish brand colors from data colors.** The accent color used in titles is different from the chart palette.
+- **Note what's absent.** If the reference uses no icons, no shadows, no rounded corners — that's part of the style. Capture it in the "NEVER" list.
+- **When fonts can't be identified precisely,** pick the closest widely-available match and note it: "Appears to be [X] or similar geometric sans-serif."
+- **When extracting from a webpage,** inspect the CSS if possible (`web_fetch` the HTML) for exact values. Otherwise estimate from the screenshot.
+
 ## Output Delivery
 
 Always save final output to `/mnt/user-data/outputs/` and present via `present_files`.
@@ -149,3 +273,6 @@ If the user might want multiple formats, offer: "I've created this as [format]. 
 
 **Scenario 4**: User types a stream-of-consciousness brain dump about a startup idea
 → Extract the core value proposition, target market, competitive advantage → Create a one-pager PDF or pitch deck PPTX.
+
+**Scenario 5**: User uploads a PPTX template + says "以后按这个风格来"
+→ Convert to images → Analyze color palette, typography, layout patterns, chart styles → Generate a new style reference file → All future outputs automatically follow this style.
